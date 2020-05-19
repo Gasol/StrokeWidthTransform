@@ -5,7 +5,7 @@ import hashlib
 import math
 import os
 import time
-from urllib2 import urlopen
+from urllib.request import urlopen
 
 import numpy as np
 import cv2
@@ -61,7 +61,7 @@ class SWTScrubber(object):
         swt[:] = np.Infinity
         rays = []
 
-        print time.clock() - t0
+        print(time.clock() - t0)
 
         # now iterate over pixels in image, checking Canny to see if we're on an edge.
         # if we are, follow a normal a ray to either the next edge or image border
@@ -72,8 +72,8 @@ class SWTScrubber(object):
         grad_x_g = step_x_g / mag_g
         grad_y_g = step_y_g / mag_g
 
-        for x in xrange(edges.shape[1]):
-            for y in xrange(edges.shape[0]):
+        for x in range(edges.shape[1]):
+            for y in range(edges.shape[0]):
                 if edges[y, x] > 0:
                     step_x = step_x_g[y, x]
                     step_y = step_y_g[y, x]
@@ -185,8 +185,8 @@ class SWTScrubber(object):
         next_label = 1
         # First Pass, raster scan-style
         swt_ratio_threshold = 3.0
-        for y in xrange(swt.shape[0]):
-            for x in xrange(swt.shape[1]):
+        for y in range(swt.shape[0]):
+            for x in range(swt.shape[1]):
                 sw_point = swt[y, x]
                 if sw_point < np.Infinity and sw_point > 0:
                     neighbors = [(y, x-1),   # west
@@ -225,8 +225,8 @@ class SWTScrubber(object):
         # Second pass. re-base all labeling with representative label for each connected tree
         layers = {}
         contours = defaultdict(list)
-        for x in xrange(swt.shape[1]):
-            for y in xrange(swt.shape[0]):
+        for x in range(swt.shape[1]):
+            for y in range(swt.shape[0]):
                 if label_map[y, x] > 0:
                     item = ld[label_map[y, x]]
                     common_label = Find(item).value
@@ -250,7 +250,7 @@ class SWTScrubber(object):
         topleft_pts = []
         images = []
 
-        for label,layer in shapes.iteritems():
+        for label,layer in shapes.items():
             (nz_y, nz_x) = np.nonzero(layer)
             east, west, south, north = max(nz_x), min(nz_x), max(nz_y), min(nz_y)
             width, height = east - west, south - north
@@ -270,8 +270,8 @@ class SWTScrubber(object):
                 continue
 
             if diagnostics:
-                print " written to image."
-                cv2.imwrite('layer'+ str(label) +'.jpg', layer * 255)
+                # print(" written to image.")
+                # cv2.imwrite('layer'+ str(label) +'.jpg', layer * 255)
 
             # we use log_base_2 so we can do linear distance comparison later using k-d tree
             # ie, if log2(x) - log2(y) > 1, we know that x > 2*y
@@ -287,9 +287,9 @@ class SWTScrubber(object):
     @classmethod
     def _find_words(cls, swts, heights, widths, topleft_pts, images):
         # Find all shape pairs that have similar median stroke widths
-        print 'SWTS'
-        print swts
-        print 'DONESWTS'
+        print('SWTS')
+        print(swts)
+        print('DONESWTS')
         swt_tree = scipy.spatial.KDTree(np.asarray(swts))
         stp = swt_tree.query_pairs(1)
 
@@ -361,7 +361,7 @@ class SWTScrubber(object):
 
 
 file_url = 'http://upload.wikimedia.org/wikipedia/commons/0/0b/ReceiptSwiss.jpg'
-local_filename = hashlib.sha224(file_url).hexdigest()
+local_filename = hashlib.sha224(file_url.encode('utf-8')).hexdigest()
 
 try:
     s3_response = urlopen(file_url)
@@ -376,6 +376,6 @@ try:
     # final_mask = cv2.GaussianBlur(final_mask, (1, 3), 0)
     # cv2.GaussianBlur(sobelx64f, (3, 3), 0)
     cv2.imwrite('final.jpg', final_mask * 255)
-    print time.clock() - t0
+    print(time.clock() - t0)
 finally:
     s3_response.close()
